@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@tonejs/midi": "^2.0.28",
     "typescript": "^5.9.3",
     "vite": "^7.1.7"
   }
