@@ -1,5 +1,6 @@
 // One-off authoring tool: converts a MIDI track into a Clone Hero-style .chart
-// file. Not part of the runtime app — run manually when preparing test songs.
+// file with all 4 difficulty tiers. Not part of the runtime app — run
+// manually when preparing test songs.
 import pkg from "@tonejs/midi";
 import { readFileSync, writeFileSync } from "node:fs";
 
@@ -46,17 +47,42 @@ function laneFor(pitch) {
 
 const SUSTAIN_MIN_SECONDS = 0.2; // shorter than this is charted as a tap (length 0)
 
-const lines = [];
-for (const chord of chords) {
-  const tick = Math.round(chord.time * ticksPerSecond);
-  const lanes = new Set(chord.notes.map((n) => laneFor(n.midi)));
-  const maxDuration = Math.max(...chord.notes.map((n) => n.duration));
-  const sustainTicks =
-    maxDuration >= SUSTAIN_MIN_SECONDS ? Math.round(maxDuration * ticksPerSecond) : 0;
-  for (const lane of lanes) {
-    lines.push(`  ${tick} = N ${lane} ${sustainTicks}`);
+// Each difficulty thins the source chords by (a) requiring a minimum gap
+// since the last kept note, so fast runs get sparser, and (b) capping how
+// many simultaneous frets a chord can keep, so easier tiers are less about
+// hand contortion and more about timing.
+const DIFFICULTIES = [
+  { section: "ExpertSingle", minGapSeconds: 0, maxLanes: 5 },
+  { section: "HardSingle", minGapSeconds: 0.15, maxLanes: 3 },
+  { section: "MediumSingle", minGapSeconds: 0.3, maxLanes: 2 },
+  { section: "EasySingle", minGapSeconds: 0.5, maxLanes: 1 },
+];
+
+function buildSection({ section, minGapSeconds, maxLanes }) {
+  const lines = [];
+  let lastKeptTime = -Infinity;
+
+  for (const chord of chords) {
+    if (chord.time - lastKeptTime < minGapSeconds) continue;
+    lastKeptTime = chord.time;
+
+    const tick = Math.round(chord.time * ticksPerSecond);
+    const lanes = [...new Set(chord.notes.map((n) => laneFor(n.midi)))]
+      .sort((a, b) => a - b)
+      .slice(0, maxLanes);
+    const maxDuration = Math.max(...chord.notes.map((n) => n.duration));
+    const sustainTicks =
+      maxDuration >= SUSTAIN_MIN_SECONDS ? Math.round(maxDuration * ticksPerSecond) : 0;
+
+    for (const lane of lanes) {
+      lines.push(`  ${tick} = N ${lane} ${sustainTicks}`);
+    }
   }
+
+  return { section, lines };
 }
+
+const builtSections = DIFFICULTIES.map(buildSection);
 
 const chart = `[Song]
 {
@@ -81,13 +107,15 @@ const chart = `[Song]
 [Events]
 {
 }
-[ExpertSingle]
-{
-${lines.join("\n")}
-}
+${builtSections
+  .map(({ section, lines }) => `[${section}]\n{\n${lines.join("\n")}\n}`)
+  .join("\n")}
 `;
 
 writeFileSync(outPath, chart);
 console.log(`Wrote ${outPath}`);
-console.log(`Track "${track.name}": ${track.notes.length} source notes -> ${chords.length} chord events -> ${lines.length} chart notes`);
+console.log(`Track "${track.name}": ${track.notes.length} source notes -> ${chords.length} chord events`);
 console.log(`Pitch range: ${minPitch}-${maxPitch}, BPM: ${bpm}`);
+for (const { section, lines } of builtSections) {
+  console.log(`  ${section}: ${lines.length} chart notes`);
+}

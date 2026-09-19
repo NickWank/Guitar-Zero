@@ -7,7 +7,14 @@
   </head>
   <body>
     <canvas id="highway"></canvas>
-    <button id="start" disabled>Loading song…</button>
+    <div id="hud" hidden>
+      <span id="score">0</span>
+      <span id="combo"></span>
+    </div>
+    <div id="menu">
+      <p id="menu-status">Loading song…</p>
+      <div id="difficulty-picker"></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

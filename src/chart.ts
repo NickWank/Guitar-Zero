@@ -16,6 +16,8 @@ export interface Chart {
   notes: ChartNote[];
 }
 
+export type Difficulty = "Easy" | "Medium" | "Hard" | "Expert";
+
 interface TempoChange {
   tick: number;
   bpm: number;
@@ -120,12 +122,12 @@ function parseNotes(lines: string[], tickToSeconds: (tick: number) => number): C
   return notes.sort((a, b) => a.timeSeconds - b.timeSeconds);
 }
 
-export function parseChart(text: string): Chart {
+export function parseChart(text: string, difficulty: Difficulty = "Expert"): Chart {
   const sections = parseSections(text);
   const song = parseSongSection(sections.get("Song") ?? []);
   const tempoChanges = parseTempoChanges(sections.get("SyncTrack") ?? []);
   const tickToSeconds = makeTickToSeconds(tempoChanges, song.resolution);
-  const notes = parseNotes(sections.get("ExpertSingle") ?? [], tickToSeconds);
+  const notes = parseNotes(sections.get(`${difficulty}Single`) ?? [], tickToSeconds);
 
   return { song, notes };
 }

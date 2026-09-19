@@ -1,13 +1,30 @@
 import "./style.css";
-import { parseChart } from "./chart";
+import { parseChart, type Difficulty } from "./chart";
 import { AudioClock } from "./audio";
 import { drawHighway } from "./highway";
+import { Game } from "./game";
+import { bindKeyboard } from "./input";
 
 const SONG_DIR = "/songs/i-wanna-be-adored";
 
+// Larger lookahead = notes travel further before reaching the hit line =
+// more reaction time = feels slower, even though the underlying chart data
+// (note count/chord size) is what the authoring script already thinned.
+const LOOKAHEAD_SECONDS: Record<Difficulty, number> = {
+  Easy: 4,
+  Medium: 3,
+  Hard: 2.5,
+  Expert: 2,
+};
+
 const canvas = document.querySelector<HTMLCanvasElement>("#highway")!;
 const ctx = canvas.getContext("2d")!;
-const startButton = document.querySelector<HTMLButtonElement>("#start")!;
+const menu = document.querySelector<HTMLDivElement>("#menu")!;
+const menuStatus = document.querySelector<HTMLParagraphElement>("#menu-status")!;
+const difficultyPicker = document.querySelector<HTMLDivElement>("#difficulty-picker")!;
+const hud = document.querySelector<HTMLDivElement>("#hud")!;
+const scoreEl = document.querySelector<HTMLSpanElement>("#score")!;
+const comboEl = document.querySelector<HTMLSpanElement>("#combo")!;
 
 function resize() {
   canvas.width = window.innerWidth;
@@ -17,28 +34,42 @@ window.addEventListener("resize", resize);
 resize();
 
 async function main() {
-  const [chartText] = await Promise.all([
-    fetch(`${SONG_DIR}/notes.chart`).then((r) => r.text()),
-  ]);
-  const chart = parseChart(chartText);
+  const chartText = await fetch(`${SONG_DIR}/notes.chart`).then((r) => r.text());
 
   const audio = new AudioClock();
   await audio.load(`${SONG_DIR}/song.mp3`);
 
-  startButton.textContent = `Play "${chart.song.name}" — ${chart.song.artist}`;
-  startButton.disabled = false;
+  const previewChart = parseChart(chartText, "Expert");
+  menuStatus.textContent = `${previewChart.song.name} — ${previewChart.song.artist}\nChoose a difficulty:`;
 
-  startButton.addEventListener("click", () => {
-    startButton.remove();
-    audio.play();
-    requestAnimationFrame(function frame() {
-      drawHighway(ctx, chart, audio.currentTime);
-      if (audio.isPlaying) requestAnimationFrame(frame);
-    });
+  (["Easy", "Medium", "Hard", "Expert"] as const).forEach((difficulty) => {
+    const button = document.createElement("button");
+    button.textContent = difficulty;
+    button.addEventListener("click", () => startGame(difficulty, chartText, audio));
+    difficultyPicker.appendChild(button);
+  });
+}
+
+function startGame(difficulty: Difficulty, chartText: string, audio: AudioClock): void {
+  const chart = parseChart(chartText, difficulty);
+  const game = new Game(chart);
+  const lookaheadSeconds = LOOKAHEAD_SECONDS[difficulty];
+
+  menu.remove();
+  hud.hidden = false;
+  bindKeyboard((lane) => game.handleLanePress(lane, audio.currentTime));
+
+  audio.play();
+  requestAnimationFrame(function frame() {
+    game.update(audio.currentTime);
+    drawHighway(ctx, game.notes, audio.currentTime, lookaheadSeconds);
+    scoreEl.textContent = String(game.score);
+    comboEl.textContent = game.combo > 1 ? `${game.combo}x combo (${game.multiplier}x)` : "";
+    if (audio.isPlaying) requestAnimationFrame(frame);
   });
 }
 
 main().catch((err) => {
-  startButton.textContent = "Failed to load song — see console";
+  menuStatus.textContent = "Failed to load song — see console";
   console.error(err);
 });
