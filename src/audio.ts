@@ -20,17 +20,22 @@ export class AudioClock {
     return this.buffer?.duration ?? 0;
   }
 
-  play(): void {
+  /**
+   * Schedules playback to begin `delaySeconds` from now. Until then,
+   * `currentTime` reads negative — a count-in the caller can use to let
+   * notes scroll into view before the song's t=0 actually sounds.
+   */
+  play(delaySeconds = 0): void {
     if (!this.buffer) throw new Error("Audio not loaded yet");
     const source = this.ctx.createBufferSource();
     source.buffer = this.buffer;
     source.connect(this.ctx.destination);
-    this.startedAtContextTime = this.ctx.currentTime;
+    this.startedAtContextTime = this.ctx.currentTime + delaySeconds;
     source.start(this.startedAtContextTime);
     this.source = source;
   }
 
-  /** Seconds elapsed since playback started, sourced from the audio clock. */
+  /** Seconds elapsed since the song's t=0 (negative during the count-in). */
   get currentTime(): number {
     if (!this.source) return 0;
     return this.ctx.currentTime - this.startedAtContextTime;

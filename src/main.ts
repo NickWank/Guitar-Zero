@@ -3,7 +3,7 @@ import { parseChart, type Difficulty } from "./chart";
 import { AudioClock } from "./audio";
 import { drawHighway } from "./highway";
 import { Game } from "./game";
-import { bindKeyboard } from "./input";
+import { bindKeyboard, bindSyncOffsetControls } from "./input";
 
 const SONG_DIR = "/songs/i-wanna-be-adored";
 
@@ -17,6 +17,10 @@ const LOOKAHEAD_SECONDS: Record<Difficulty, number> = {
   Expert: 2,
 };
 
+// Extra silence before the song's audio actually starts, so the first notes
+// have time to scroll into view instead of already being on top of you.
+const COUNT_IN_BUFFER_SECONDS = 1.5;
+
 const canvas = document.querySelector<HTMLCanvasElement>("#highway")!;
 const ctx = canvas.getContext("2d")!;
 const menu = document.querySelector<HTMLDivElement>("#menu")!;
@@ -25,6 +29,8 @@ const difficultyPicker = document.querySelector<HTMLDivElement>("#difficulty-pic
 const hud = document.querySelector<HTMLDivElement>("#hud")!;
 const scoreEl = document.querySelector<HTMLSpanElement>("#score")!;
 const comboEl = document.querySelector<HTMLSpanElement>("#combo")!;
+const syncOffsetEl = document.querySelector<HTMLSpanElement>("#sync-offset")!;
+const countdownEl = document.querySelector<HTMLDivElement>("#countdown")!;
 
 function resize() {
   canvas.width = window.innerWidth;
@@ -54,15 +60,32 @@ function startGame(difficulty: Difficulty, chartText: string, audio: AudioClock)
   const chart = parseChart(chartText, difficulty);
   const game = new Game(chart);
   const lookaheadSeconds = LOOKAHEAD_SECONDS[difficulty];
+  let syncOffset = 0;
 
   menu.remove();
   hud.hidden = false;
-  bindKeyboard((lane) => game.handleLanePress(lane, audio.currentTime));
+  countdownEl.hidden = false;
 
-  audio.play();
+  bindKeyboard((lane) => {
+    if (audio.currentTime + syncOffset >= 0) game.handleLanePress(lane, audio.currentTime + syncOffset);
+  });
+  bindSyncOffsetControls((delta) => {
+    syncOffset += delta;
+    syncOffsetEl.textContent = `offset ${syncOffset >= 0 ? "+" : ""}${syncOffset.toFixed(2)}s`;
+  });
+
+  audio.play(lookaheadSeconds + COUNT_IN_BUFFER_SECONDS);
   requestAnimationFrame(function frame() {
-    game.update(audio.currentTime);
-    drawHighway(ctx, game.notes, audio.currentTime, lookaheadSeconds);
+    const t = audio.currentTime + syncOffset;
+
+    if (t < 0) {
+      countdownEl.textContent = Math.ceil(-t).toString();
+    } else if (!countdownEl.hidden) {
+      countdownEl.hidden = true;
+    }
+
+    game.update(t);
+    drawHighway(ctx, game.notes, t, lookaheadSeconds, game.recentMisses);
     scoreEl.textContent = String(game.score);
     comboEl.textContent = game.combo > 1 ? `${game.combo}x combo (${game.multiplier}x)` : "";
     if (audio.isPlaying) requestAnimationFrame(frame);
