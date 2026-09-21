@@ -14,8 +14,13 @@
     </div>
     <div id="countdown" hidden></div>
     <div id="menu">
-      <p id="menu-status">Loading song…</p>
-      <div id="difficulty-picker"></div>
+      <p id="menu-status">Loading…</p>
+      <div id="song-list"></div>
+      <div id="upload-section">
+        <label id="upload-label" for="upload-input">Upload a song (MP3)</label>
+        <input type="file" id="upload-input" accept="audio/mpeg,audio/mp3,.mp3" />
+      </div>
+      <div id="difficulty-picker" hidden></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

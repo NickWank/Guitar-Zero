@@ -12,7 +12,15 @@ export class AudioClock {
 
   async load(url: string): Promise<void> {
     const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
+    await this.decode(await response.arrayBuffer());
+  }
+
+  /** Loads audio from a locally-held file (e.g. an upload or an IndexedDB record), no network fetch. */
+  async loadFromBlob(blob: Blob): Promise<void> {
+    await this.decode(await blob.arrayBuffer());
+  }
+
+  private async decode(arrayBuffer: ArrayBuffer): Promise<void> {
     this.buffer = await this.ctx.decodeAudioData(arrayBuffer);
   }
 
