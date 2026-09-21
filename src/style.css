@@ -23,6 +23,47 @@ canvas {
   text-align: center;
 }
 
+#song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 40vh;
+  overflow-y: auto;
+  min-width: 20rem;
+}
+
+.song-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.song-row-play {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.song-row-remove {
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  color: #ef4444;
+}
+
+#upload-label {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  border: 1px solid #555;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+#upload-input {
+  display: none;
+}
+
 #difficulty-picker {
   display: flex;
   gap: 0.5rem;
