@@ -1,1 +1,1 @@
-{"root":["./src/audio.ts","./src/chart.ts","./src/game.ts","./src/highway.ts","./src/input.ts","./src/main.ts","./src/vite-env.d.ts"],"version":"5.9.3"}
+{"root":["./src/audio.ts","./src/chart.ts","./src/chartgenerator.ts","./src/game.ts","./src/highway.ts","./src/input.ts","./src/library.ts","./src/main.ts","./src/vite-env.d.ts"],"version":"5.9.3"}

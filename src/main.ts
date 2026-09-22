@@ -3,7 +3,7 @@ import { parseChart, type Chart, type Difficulty } from "./chart";
 import { AudioClock } from "./audio";
 import { drawHighway } from "./highway";
 import { Game } from "./game";
-import { bindKeyboard, bindSyncOffsetControls } from "./input";
+import { bindHeldLanes, bindKeyboard, bindSyncOffsetControls } from "./input";
 import { generateChart } from "./chartGenerator";
 import { addLibrarySong, deleteLibrarySong, getLibrarySong, listLibrarySongs, type LibrarySongMeta } from "./library";
 
@@ -194,6 +194,7 @@ async function startGame(difficulty: Difficulty, song: PlayableSong): Promise<vo
     syncOffset += delta;
     syncOffsetEl.textContent = `offset ${syncOffset >= 0 ? "+" : ""}${syncOffset.toFixed(2)}s`;
   });
+  const { held: heldLanes } = bindHeldLanes();
 
   audio.play(lookaheadSeconds + COUNT_IN_BUFFER_SECONDS);
   requestAnimationFrame(function frame() {
@@ -205,8 +206,8 @@ async function startGame(difficulty: Difficulty, song: PlayableSong): Promise<vo
       countdownEl.hidden = true;
     }
 
-    game.update(t);
-    drawHighway(ctx, game.notes, t, lookaheadSeconds, game.recentMisses);
+    game.update(t, heldLanes);
+    drawHighway(ctx, game.notes, t, lookaheadSeconds, game.recentMisses, game.recentHits);
     scoreEl.textContent = String(game.score);
     comboEl.textContent = game.combo > 1 ? `${game.combo}x combo (${game.multiplier}x)` : "";
     if (audio.isPlaying) requestAnimationFrame(frame);

@@ -1,12 +1,27 @@
+:root {
+  --panel-bg: rgba(22, 22, 38, 0.8);
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --text: #f0f0f5;
+  --text-dim: #9a9ab0;
+}
+
 html, body {
   margin: 0;
   height: 100%;
-  background: #111;
+  background: #0b0b16;
   overflow: hidden;
 }
 
 canvas {
   display: block;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
 
 #menu {
@@ -17,19 +32,27 @@ canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   font-family: system-ui, sans-serif;
-  color: #eee;
+  color: var(--text);
   text-align: center;
+  padding: 2rem 2.5rem;
+  min-width: 22rem;
+}
+
+#menu-status {
+  white-space: pre-line;
+  line-height: 1.5;
+  margin: 0;
 }
 
 #song-list {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
   max-height: 40vh;
   overflow-y: auto;
-  min-width: 20rem;
+  width: 100%;
 }
 
 .song-row {
@@ -39,25 +62,50 @@ canvas {
 
 .song-row-play {
   flex: 1;
-  padding: 0.6rem 1rem;
+  padding: 0.7rem 1rem;
   font-size: 1rem;
   cursor: pointer;
   text-align: left;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.6rem;
+  color: var(--text);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.song-row-play:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .song-row-remove {
-  padding: 0.6rem 0.8rem;
+  padding: 0.6rem 0.9rem;
   cursor: pointer;
-  color: #ef4444;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 0.6rem;
+  transition: background 0.15s ease;
+}
+
+.song-row-remove:hover {
+  background: rgba(239, 68, 68, 0.18);
 }
 
 #upload-label {
   display: inline-block;
-  padding: 0.6rem 1.2rem;
+  padding: 0.7rem 1.4rem;
   font-size: 0.95rem;
-  border: 1px solid #555;
-  border-radius: 0.25rem;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 0.6rem;
   cursor: pointer;
+  color: var(--text-dim);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+#upload-label:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 #upload-input {
@@ -66,40 +114,66 @@ canvas {
 
 #difficulty-picker {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 #difficulty-picker button {
-  padding: 0.75rem 1.5rem;
+  padding: 0.8rem 1.4rem;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
+  border-radius: 0.6rem;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+
+#difficulty-picker button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 #difficulty-picker button:disabled {
   cursor: default;
   opacity: 0.6;
+  transform: none;
 }
+
+#difficulty-picker button:nth-of-type(1) { border-color: rgba(34, 197, 94, 0.5); }
+#difficulty-picker button:nth-of-type(2) { border-color: rgba(234, 179, 8, 0.5); }
+#difficulty-picker button:nth-of-type(3) { border-color: rgba(249, 115, 22, 0.5); }
+#difficulty-picker button:nth-of-type(4) { border-color: rgba(239, 68, 68, 0.5); }
 
 #hud {
   position: fixed;
   top: 1rem;
   left: 1rem;
   font-family: system-ui, sans-serif;
-  color: #eee;
+  color: var(--text);
   font-size: 1.5rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.1rem;
   align-items: baseline;
+  padding: 0.6rem 1.2rem;
+}
+
+#score {
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 #combo {
   font-size: 1.1rem;
   color: #4ade80;
+  font-weight: 600;
 }
 
 #sync-offset {
-  font-size: 0.9rem;
-  color: #888;
+  font-size: 0.85rem;
+  color: var(--text-dim);
 }
 
 #countdown {
@@ -108,7 +182,8 @@ canvas {
   left: 50%;
   transform: translate(-50%, -50%);
   font-family: system-ui, sans-serif;
-  font-size: 4rem;
-  font-weight: bold;
-  color: #eee;
+  font-size: 4.5rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
 }
